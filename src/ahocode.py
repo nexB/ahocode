@@ -147,15 +147,37 @@ class Automaton:
         Return True if the key is present in the trie. Same as using
         the 'in' keyword.
         """
-        current_state = self._zero_state
-        for char in key:
-            try:
-                current_state = current_state[char]
-            except KeyError:
-                return False
-        return True
+        if not self._finalized:
+            current_state = self._zero_state
+            for char in key:
+                try:
+                    current_state = current_state[char]
+                except KeyError:
+                    return False
+            return True
+        else:
+            self.search_all(key)
 
-    def get(self, key, default=None):  # real signature unknown; restored from __doc__
+    def iter(self, string, start=None, end=None, *args, **kwargs):
+        if not self._finalized:
+            raise ValueError('Automaton has not been finalized. No search allowed. Call make_automaton() first.')
+        zero_state = self._zero_state
+        current_state = zero_state
+        offset = 0
+        if (start and end) is not None:
+            offset = start
+            string = string[start:end + 1]
+        for idx, symbol in enumerate(string):
+            current_state = current_state.transitions.get(
+                symbol, zero_state.transitions.get(symbol, zero_state))
+            state = current_state
+            while state is not zero_state:
+                if state.success:
+                    value = state.value
+                    yield idx + offset, value
+                state = state.longest_strict_suffix
+
+    def get(self, key, default=None):
         """
         get(key[, default])
 
@@ -170,12 +192,33 @@ class Automaton:
         current_state = self._zero_state
         for char in key:
             try:
-                current_state = current_state[char]
+                current_state = current_state.transitions[char]
             except KeyError:
                 return default
         return current_state.value
 
-    def make_automaton(self):  # real signature unknown; restored from __doc__
+    def values(self, prefix=None, wildcard=None, how=None):
+        for key, value in list(self.items()):
+            yield key
+
+    def keys(self, prefix=None, wildcard=None, how=None):
+        for key, value in list(self.items()):
+            yield value
+
+    def items(self, prefix=None, wildcard=None, how=None):
+        processed = set()
+        zero_state = self._zero_state
+        to_process = [zero_state]
+        while to_process:
+            state = to_process.pop()
+            if state.success:
+                yield state.matched_keyword, state.value
+            processed.add(state.identifier)
+            for child in state.transitions.values():
+                if child.identifier not in processed:
+                    to_process.append(child)
+
+    def make_automaton(self):
         """
         make_automaton()
 
@@ -229,10 +272,8 @@ class Automaton:
         parent = state.parent
         traversed = parent.longest_strict_suffix
         while True:
-            if state.symbol in traversed.transitions and \
-                    traversed.transitions[state.symbol] is not state:
-                state.longest_strict_suffix = \
-                    traversed.transitions[state.symbol]
+            if state.symbol in traversed.transitions and traversed.transitions[state.symbol] is not state:
+                state.longest_strict_suffix = traversed.transitions[state.symbol]
                 break
             elif traversed is zero_state:
                 state.longest_strict_suffix = zero_state
@@ -247,3 +288,54 @@ class Automaton:
         for symbol, next_state in suffix.transitions.items():
             if symbol not in state.transitions:
                 state.transitions[symbol] = next_state
+
+    def __getstate__(self):
+        state_list = [None] * self._counter
+        todo_list = [self._zero_state]
+        while todo_list:
+            state = todo_list.pop()
+            transitions = {key: value.identifier for key,
+            value in state.transitions.items()}
+            state_list[state.identifier] = {
+                'symbol': state.symbol,
+                'success': state.success,
+                'parent': state.parent.identifier if state.parent is not None else None,
+                'matched_keyword': state.matched_keyword,
+                'value': state.value,
+                'longest_strict_suffix': state.longest_strict_suffix.identifier if state.longest_strict_suffix is not None else None,
+                'transitions': transitions
+            }
+            for child in state.transitions.values():
+                if len(state_list) <= child.identifier or not state_list[child.identifier]:
+                    todo_list.append(child)
+
+        return {
+            'finalized': self._finalized,
+            'counter': self._counter,
+            'states': state_list
+        }
+
+    def __setstate__(self, state):
+        self._counter = state['counter']
+        self._finalized = state['finalized']
+        states = [None] * len(state['states'])
+        for idx, serialized_state in enumerate(state['states']):
+            deserialized_state = State(idx, serialized_state['symbol'])
+            deserialized_state.success = serialized_state['success']
+            deserialized_state.matched_keyword = serialized_state['matched_keyword']
+            deserialized_state.value = serialized_state['value']
+            states[idx] = deserialized_state
+        for idx, serialized_state in enumerate(state['states']):
+            deserialized_state = states[idx]
+            if serialized_state['longest_strict_suffix'] is not None:
+                deserialized_state.longest_strict_suffix = states[
+                    serialized_state['longest_strict_suffix']]
+            else:
+                deserialized_state.longest_strict_suffix = None
+            if serialized_state['parent'] is not None:
+                deserialized_state.parent = states[serialized_state['parent']]
+            else:
+                deserialized_state.parent = None
+            deserialized_state.transitions = {
+                key: states[value] for key, value in serialized_state['transitions'].items()}
+        self._zero_state = states[0]
