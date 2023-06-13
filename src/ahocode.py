@@ -1,3 +1,11 @@
+#
+# Copyright (c) nexB Inc. and others. All rights reserved.
+# ahocode is a trademark of nexB Inc.
+# SPDX-License-Identifier: Apache-2.0
+# See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
+# See https://github.com/nexB/ahocode for support or download.
+# See https://aboutcode.org for more information about nexB OSS projects.
+#
 AHOCORASICK = 2
 
 EMPTY = 0
@@ -36,7 +44,7 @@ class State(object):
 
     def __str__(self):
         transitions_as_string = ','.join(
-            ['{0} -> {1}'.format(key, value.identifier) for key, value in self.transitions.items()])
+            '{0} -> {1}'.format(key, value.identifier) for key, value in self.transitions.items())
         return "State {0}. Transitions: {1}".format(self.identifier, transitions_as_string)
 
 
@@ -198,11 +206,11 @@ class Automaton:
         return current_state.value
 
     def values(self, prefix=None, wildcard=None, how=None):
-        for key, value in list(self.items()):
+        for key, value in self.items():
             yield key
 
     def keys(self, prefix=None, wildcard=None, how=None):
-        for key, value in list(self.items()):
+        for key, value in self.items():
             yield value
 
     def items(self, prefix=None, wildcard=None, how=None):
@@ -242,8 +250,7 @@ class Automaton:
                  Or None if no keyword was found in the text.
         """
         if not self._finalized:
-            raise ValueError('KeywordTree has not been finalized.' +
-                             ' No search allowed. Call finalize() first.')
+            raise ValueError('KeywordTree has not been finalized. No search allowed. Call make_automaton() first.')
         zero_state = self._zero_state
         current_state = zero_state
         for idx, symbol in enumerate(text):
@@ -291,9 +298,9 @@ class Automaton:
 
     def __getstate__(self):
         state_list = [None] * self._counter
-        todo_list = [self._zero_state]
-        while todo_list:
-            state = todo_list.pop()
+        process_queue = [self._zero_state]
+        while process_queue:
+            state = process_queue.pop()
             transitions = {key: value.identifier for key,
             value in state.transitions.items()}
             state_list[state.identifier] = {
@@ -307,7 +314,7 @@ class Automaton:
             }
             for child in state.transitions.values():
                 if len(state_list) <= child.identifier or not state_list[child.identifier]:
-                    todo_list.append(child)
+                    process_queue.append(child)
 
         return {
             'finalized': self._finalized,
