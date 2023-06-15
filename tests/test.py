@@ -7,10 +7,9 @@
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
-import subprocess
 import unittest
-import configparser
-import ahocode
+
+from ahocode import ahocode
 
 
 class test_automaton_methods(unittest.TestCase):
