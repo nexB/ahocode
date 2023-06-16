@@ -30,6 +30,8 @@ TRIE = 1
 
 unicode = 1
 
+DEFAULT = object()
+
 
 class State(object):
     __slots__ = ['identifier', 'symbol', 'success', 'transitions', 'parent',
@@ -81,6 +83,8 @@ class Automaton:
 
         self.value_type = value_type
         self.key_type = key_type
+        self._kind = EMPTY
+        self._size = 0
 
     def add_word(self, key, value=None):
         """
@@ -138,6 +142,8 @@ class Automaton:
             return False
         current_state.success = True
         current_state.matched_keyword = original_keyword
+        self._kind = TRIE
+        self._size += 1
         return True
 
     def clear(self):  # real signature unknown; restored from __doc__
@@ -150,6 +156,8 @@ class Automaton:
         self._zero_state = State(0)
         self._counter = 1
         self._finalized = False
+        self._kind = EMPTY
+        self._size = 0
 
     def exists(self, key):  # real signature unknown; restored from __doc__
         """
@@ -158,11 +166,13 @@ class Automaton:
         Return True if the key is present in the trie. Same as using
         the 'in' keyword.
         """
+        if not isinstance(key, str):
+            raise Exception(f"Expected string but got {type(key)}")
         if not self._finalized:
             current_state = self._zero_state
             for char in key:
                 try:
-                    current_state = current_state[char]
+                    current_state = current_state.transitions[char]
                 except KeyError:
                     return False
             return True
@@ -188,7 +198,7 @@ class Automaton:
                     yield idx + offset, value
                 state = state.longest_strict_suffix
 
-    def get(self, key, default=None):
+    def get(self, key, default=DEFAULT):
         """
         get(key[, default])
 
@@ -205,7 +215,10 @@ class Automaton:
             try:
                 current_state = current_state.transitions[char]
             except KeyError:
-                return default
+                if default is not DEFAULT:
+                    return default
+                else:
+                    raise KeyError(f"Key: {key} not found in trie")
         return current_state.value
 
     def find_all(self, string, callback, start=None, end=None):
@@ -266,6 +279,7 @@ class Automaton:
         self._zero_state.longest_strict_suffix = self._zero_state
         self.search_lss_for_children(self._zero_state)
         self._finalized = True
+        self._kind = AHOCORASICK
 
     def search_all(self, text):
         """
@@ -372,3 +386,13 @@ class Automaton:
             deserialized_state.transitions = {
                 key: states[value] for key, value in serialized_state['transitions'].items()}
         self._zero_state = states[0]
+
+    def __len__(self):
+        return self._size
+
+    def __contains__(self, item):
+        return self.exists(item)
+
+    @property
+    def kind(self):
+        return self._kind

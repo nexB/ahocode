@@ -7,7 +7,7 @@
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 # Tests are taken from: WojciechMula/pyahocorasick
-# https://github.com/WojciechMula/pyahocorasick/blob/master/tests/test_basic.py
+# https://github.com/WojciechMula/pyahocorasick/blob/master/tests
 
 import unittest
 
@@ -78,3 +78,116 @@ class test_automaton_methods(unittest.TestCase):
         assert sorted(automaton.values()) == sorted(expected_values)
         assert sorted(dict(automaton.items()).values()) == sorted(expected_values)
         assert sorted(dict(automaton.items()).keys()) == sorted(expected_keys)
+
+
+class TestCase(unittest.TestCase):
+
+    def assertEmpty(self, collection):
+        self.assertEqual(0, len(collection))
+
+    def assertNotEmpty(self, collection):
+        self.assertGreater(len(collection), 0)
+
+
+class TestTrieStorePyObjectsBase(TestCase):
+
+    def setUp(self):
+        self.A = ahocode.Automaton()
+        self.words = "word python aho corasick \x00\x00\x00".split()
+        self.inexisting = "test foo bar dword".split()
+
+
+class TestTrieMethods(TestTrieStorePyObjectsBase):
+    "Test basic methods related to trie structure"
+
+    def test_add_word(self):
+        A = self.A
+        self.assertTrue(A.kind == ahocode.EMPTY)
+
+        n = 0
+        for word in self.words:
+            n += 1
+            A.add_word(word, None)
+            self.assertEqual(A.kind, ahocode.TRIE)
+            self.assertEqual(len(A), n)
+
+        # dupliacted entry
+        A.add_word(self.words[0], None)
+        self.assertTrue(A.kind == ahocode.TRIE)
+        self.assertTrue(len(A) == n)
+
+    def test_add_empty_word(self):
+        if ahocode.unicode:
+            self.assertFalse(self.A.add_word("", None))
+        else:
+            self.assertFalse(self.A.add_word(b"", None))
+
+        self.assertEqual(len(self.A), 0)
+        self.assertEqual(self.A.kind, ahocode.EMPTY)
+
+    def test_clear(self):
+        A = self.A
+        self.assertTrue(A.kind == ahocode.EMPTY)
+
+        for w in self.words:
+            A.add_word(w, w)
+
+        self.assertEqual(len(A), len(self.words))
+
+        A.clear()
+        self.assertEqual(A.kind, ahocode.EMPTY)
+        self.assertEqual(len(A), 0)
+
+    def test_exists(self):
+        A = self.A
+
+        for w in self.words:
+            A.add_word(w, w)
+
+        for w in self.words:
+            self.assertTrue(A.exists(w))
+
+        for w in self.inexisting:
+            self.assertFalse(A.exists(w))
+
+    def test_contains(self):
+        A = self.A
+        for w in self.words:
+            A.add_word(w, w)
+
+        for w in self.words:
+            self.assertTrue(w in A)
+
+        for w in self.inexisting:
+            self.assertTrue(w not in A)
+
+    def test_get1(self):
+        A = self.A
+        for i, w in enumerate(self.words):
+            A.add_word(w, i + 1)
+
+        for i, w in enumerate(self.words):
+            self.assertEqual(A.get(w), i + 1)
+
+    def test_get2(self):
+        A = self.A
+        for i, w in enumerate(self.words):
+            A.add_word(w, i + 1)
+
+        for w in self.inexisting:
+            self.assertEqual(A.get(w, None), None)
+
+    def test_get3(self):
+        A = self.A
+        for i, w in enumerate(self.words):
+            A.add_word(w, i + 1)
+
+        for w in self.inexisting:
+            with self.assertRaises(KeyError):
+                A.get(w)
+
+    def test_get_from_an_empty_automaton(self):
+        A = ahocode.Automaton()
+
+        r = A.get('foo', None)
+        self.assertEqual(r, None)
