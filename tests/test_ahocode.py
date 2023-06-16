@@ -6,7 +6,7 @@
 # See https://github.com/nexB/ahocode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
-# Tests are taken from:
+# Tests are taken from: WojciechMula/pyahocorasick
 # https://github.com/WojciechMula/pyahocorasick/blob/master/tests/test_basic.py
 
 import unittest

@@ -6,7 +6,7 @@
 # See https://github.com/nexB/ahocode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
-# The code is taken from:
+# The code is taken from abusix/ahocorapy:
 # https://github.com/abusix/ahocorapy/blob/master/src/ahocorapy/keywordtree.py
 
 AHOCORASICK = 2
