@@ -6,6 +6,9 @@
 # See https://github.com/nexB/ahocode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
+# The code is taken from:
+# https://github.com/abusix/ahocorapy/blob/master/src/ahocorapy/keywordtree.py
+
 AHOCORASICK = 2
 
 EMPTY = 0
@@ -172,7 +175,7 @@ class Automaton:
         zero_state = self._zero_state
         current_state = zero_state
         offset = 0
-        if (start and end) is not None:
+        if (start and end) != None:
             offset = start
             string = string[start:end]
         for idx, symbol in enumerate(string):
@@ -313,7 +316,7 @@ class Automaton:
         suffix = state.longest_strict_suffix
         if suffix is zero_state:
             return
-        if suffix.longest_strict_suffix is None:
+        if suffix.longest_strict_suffix == None:
             self.search_lss(suffix)
         for symbol, next_state in suffix.transitions.items():
             if symbol not in state.transitions:
@@ -329,10 +332,10 @@ class Automaton:
             state_list[state.identifier] = {
                 'symbol': state.symbol,
                 'success': state.success,
-                'parent': state.parent.identifier if state.parent is not None else None,
+                'parent': state.parent.identifier if state.parent != None else None,
                 'matched_keyword': state.matched_keyword,
                 'value': state.value,
-                'longest_strict_suffix': state.longest_strict_suffix.identifier if state.longest_strict_suffix is not None else None,
+                'longest_strict_suffix': state.longest_strict_suffix.identifier if state.longest_strict_suffix != None else None,
                 'transitions': transitions
             }
             for child in state.transitions.values():
@@ -357,12 +360,12 @@ class Automaton:
             states[idx] = deserialized_state
         for idx, serialized_state in enumerate(state['states']):
             deserialized_state = states[idx]
-            if serialized_state['longest_strict_suffix'] is not None:
+            if serialized_state['longest_strict_suffix'] != None:
                 deserialized_state.longest_strict_suffix = states[
                     serialized_state['longest_strict_suffix']]
             else:
                 deserialized_state.longest_strict_suffix = None
-            if serialized_state['parent'] is not None:
+            if serialized_state['parent'] != None:
                 deserialized_state.parent = states[serialized_state['parent']]
             else:
                 deserialized_state.parent = None

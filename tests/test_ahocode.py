@@ -3,9 +3,11 @@
 # ScanCode is a trademark of nexB Inc.
 # SPDX-License-Identifier: Apache-2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
-# See https://github.com/nexB/skeleton for support or download.
+# See https://github.com/nexB/ahocode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
+# Tests are taken from:
+# https://github.com/WojciechMula/pyahocorasick/blob/master/tests/test_basic.py
 
 import unittest
 
