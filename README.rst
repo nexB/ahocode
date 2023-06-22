@@ -1,7 +1,6 @@
 ahocode
 ==================
 This repo is a pure python implementation for `pyahocorasick <https://github.com/WojciechMula/pyahocorasick>`_, inspired by `abusix/ahocorapy <https://github.com/abusix/ahocorapy>`_.
-This library heavily reuses code from `abusix/ahocorapy <https://github.com/abusix/ahocorapy>`_
 
 
 Installation
