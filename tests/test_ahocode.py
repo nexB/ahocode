@@ -3,7 +3,7 @@
 # ScanCode is a trademark of nexB Inc.
 # SPDX-License-Identifier: Apache-2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
-# See https://github.com/nexB/ahocode for support or download.
+# See https://github.com/aboutcode-org/ahocode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 # Tests are taken from: WojciechMula/pyahocorasick
@@ -69,14 +69,16 @@ class test_automaton_methods(unittest.TestCase):
 
         assert sorted(automaton.keys()) == sorted(expected_keys)
         assert sorted(automaton.values()) == sorted(expected_values)
-        assert sorted(dict(automaton.items()).values()) == sorted(expected_values)
+        assert sorted(dict(automaton.items()).values()
+                      ) == sorted(expected_values)
         assert sorted(dict(automaton.items()).keys()) == sorted(expected_keys)
 
         automaton.make_automaton()
 
         assert sorted(automaton.keys()) == sorted(expected_keys)
         assert sorted(automaton.values()) == sorted(expected_values)
-        assert sorted(dict(automaton.items()).values()) == sorted(expected_values)
+        assert sorted(dict(automaton.items()).values()
+                      ) == sorted(expected_values)
         assert sorted(dict(automaton.items()).keys()) == sorted(expected_keys)
 
 
